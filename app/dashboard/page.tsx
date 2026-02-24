@@ -1,12 +1,10 @@
-import { AppSidebar } from "@/components/app-sidebar";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
-import { SiteHeader } from "@/components/site-header";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import data from "./data.json";
 import { Metadata } from "next";
+import { Flex } from "@radix-ui/themes";
 
 export const metadata: Metadata = {
   title: "Linkly | Dashboard",
@@ -15,16 +13,26 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+    <Flex direction="row">
+      <Flex
+        flexGrow="1"
+        gap="8px"
+        direction="column"
+        display="inline-flex"
+        className="@container/main"
+      >
+        <Flex
+          direction="column"
+          gap={{ initial: "16px", lg: "24px" }}
+          py={{ initial: "16px", lg: "24px" }}
+        >
           <SectionCards />
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
           <DataTable data={data} />
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </Flex>
+    </Flex>
   );
 }
