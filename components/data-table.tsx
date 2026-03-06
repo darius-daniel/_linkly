@@ -103,18 +103,35 @@ import {
   TrendingUpIcon,
   CopyIcon,
   ExternalLinkIcon,
+  TriangleAlert,
 } from "lucide-react";
+import axiosInstance from "@/lib/axios";
+import { dashboardQueryClient } from "@/app/dashboard/layout";
+import { useMutation } from "@tanstack/react-query";
+import { Link } from "@/app/generated/prisma/client";
 
 export const schema = z.object({
-  id: z.number(),
+  id: z.string(),
+  title: z.string().nullable().optional(),
   slug: z.string(),
-  destination: z.string(),
-  status: z.string(),
+  url: z.string(),
+  user_id: z.string().nullable().optional(),
   clicks: z.number(),
-  created: z.string(),
+  expires_at: z.string().nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
 });
 
-function DragHandle({ id }: { id: number }) {
+type LinkRow = z.infer<typeof schema>;
+
+function getLinkStatus(link: LinkRow): "Active" | "Expired" | "Inactive" {
+  if (link.expires_at && new Date(link.expires_at) < new Date()) {
+    return "Expired";
+  }
+  return "Active";
+}
+
+function DragHandle({ id }: { id: string }) {
   const { attributes, listeners } = useSortable({ id });
   return (
     <Button
@@ -155,7 +172,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
+const columns: ColumnDef<LinkRow>[] = [
   {
     id: "drag",
     header: () => null,
@@ -194,26 +211,29 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "destination",
+    accessorKey: "url",
     header: "Destination",
     cell: ({ row }) => (
       <a
-        href={row.original.destination}
+        href={row.original.url}
         target="_blank"
         rel="noopener noreferrer"
         className="text-muted-foreground flex max-w-[240px] items-center gap-1 truncate text-sm hover:text-foreground"
       >
         <span className="truncate">
-          {row.original.destination.replace(/^https?:\/\//, "")}
+          {row.original.url.replace(/^https?:\/\//, "")}
         </span>
         <ExternalLinkIcon className="size-3 shrink-0" />
       </a>
     ),
   },
   {
-    accessorKey: "status",
+    id: "status",
     header: "Status",
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    cell: ({ row }) => <StatusBadge status={getLinkStatus(row.original)} />,
+    filterFn: (row, _columnId, filterValue) => {
+      return getLinkStatus(row.original) === filterValue;
+    },
   },
   {
     accessorKey: "clicks",
@@ -225,11 +245,11 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     ),
   },
   {
-    accessorKey: "created",
+    accessorKey: "created_at",
     header: "Created",
     cell: ({ row }) => (
       <span className="text-muted-foreground text-sm">
-        {new Date(row.original.created).toLocaleDateString("en-US", {
+        {new Date(row.original.created_at).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
           year: "numeric",
@@ -239,50 +259,86 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-            size="icon"
-          >
-            <EllipsisVerticalIcon />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-36">
-          <DropdownMenuItem
-            onClick={() => {
-              navigator.clipboard.writeText(
-                `https://lnkly.io/${row.original.slug}`,
-              );
-              toast.success("Copied to clipboard");
-            }}
-          >
-            <CopyIcon className="mr-2 size-3.5" />
-            Copy link
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <a
-              href={row.original.destination}
-              target="_blank"
-              rel="noopener noreferrer"
+    cell: ({ row }) => {
+      const linkDeleteMutation = useMutation({
+        mutationFn: async () => {
+          const response = await axiosInstance.delete(
+            `/links/${row.original.id}`,
+          );
+
+          response.status === 500
+            ? toast.error("Deletion failed", {
+                icon: <TriangleAlert color="red" />,
+              })
+            : toast.success("Deleted successfully", {
+                icon: <CircleCheckIcon color="green" />,
+              });
+        },
+        onSuccess: () => {
+          const cachedLinks = dashboardQueryClient.getQueryData([
+            "links",
+          ]) as Link[];
+          dashboardQueryClient.setQueryData(
+            ["links"],
+            cachedLinks.filter((item) => item.id !== row.original.id),
+          );
+        },
+      });
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+              size="icon"
             >
-              <ExternalLinkIcon className="mr-2 size-3.5" />
-              Visit URL
-            </a>
-          </DropdownMenuItem>
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+              <EllipsisVerticalIcon />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `https://lnkly.io/${row.original.slug}`,
+                );
+                toast.success("Copied to clipboard", {
+                  icon: <CircleCheckIcon color="green" />,
+                });
+              }}
+            >
+              <CopyIcon className="mr-2 size-3.5" />
+              Copy link
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a
+                href={row.original.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLinkIcon className="mr-2 size-3.5" />
+                Visit URL
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {}}>Edit</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={async () => {
+                linkDeleteMutation.mutate();
+              }}
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
 ];
 
-function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
+function DraggableRow({ row }: { row: Row<LinkRow> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   });
@@ -307,12 +363,12 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   );
 }
 
-export function DataTable({
-  data: initialData,
-}: {
-  data: z.infer<typeof schema>[];
-}) {
+export function DataTable({ data: initialData }: { data: LinkRow[] }) {
   const [data, setData] = React.useState(() => initialData);
+  React.useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
+
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -334,16 +390,14 @@ export function DataTable({
 
   const filteredData = React.useMemo(() => {
     if (activeTab === "active")
-      return data.filter((d) => d.status === "Active");
+      return data.filter((d) => getLinkStatus(d) === "Active");
     if (activeTab === "expired")
-      return data.filter((d) => d.status === "Expired");
-    if (activeTab === "inactive")
-      return data.filter((d) => d.status === "Inactive");
+      return data.filter((d) => getLinkStatus(d) === "Expired");
     return data;
   }, [data, activeTab]);
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => filteredData?.map(({ id }) => id) || [],
+    () => filteredData?.map(({ id }) => id as UniqueIdentifier) || [],
     [filteredData],
   );
 
@@ -357,7 +411,7 @@ export function DataTable({
       columnFilters,
       pagination,
     },
-    getRowId: (row) => row.id.toString(),
+    getRowId: (row) => row.id,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -385,9 +439,8 @@ export function DataTable({
 
   const counts = React.useMemo(
     () => ({
-      active: data.filter((d) => d.status === "Active").length,
-      expired: data.filter((d) => d.status === "Expired").length,
-      inactive: data.filter((d) => d.status === "Inactive").length,
+      active: data.filter((d) => getLinkStatus(d) === "Active").length,
+      expired: data.filter((d) => getLinkStatus(d) === "Expired").length,
     }),
     [data],
   );
@@ -415,7 +468,6 @@ export function DataTable({
               <SelectItem value="all">All Links</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="expired">Expired</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -426,9 +478,6 @@ export function DataTable({
           </TabsTrigger>
           <TabsTrigger value="expired">
             Expired <Badge variant="secondary">{counts.expired}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="inactive">
-            Inactive <Badge variant="secondary">{counts.inactive}</Badge>
           </TabsTrigger>
         </TabsList>
         <div className="flex items-center gap-2">
@@ -469,7 +518,7 @@ export function DataTable({
         </div>
       </div>
 
-      {["all", "active", "expired", "inactive"].map((tab) => (
+      {["all", "active", "expired"].map((tab) => (
         <TabsContent
           key={tab}
           value={tab}
@@ -625,9 +674,10 @@ const sparkConfig = {
   },
 } satisfies ChartConfig;
 
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
+function TableCellViewer({ item }: { item: LinkRow }) {
   const isMobile = useIsMobile();
   const shortUrl = `lnkly.io/${item.slug}`;
+  const status = getLinkStatus(item);
 
   return (
     <Drawer direction={isMobile ? "bottom" : "right"}>
@@ -643,7 +693,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
         <DrawerHeader className="gap-1">
           <DrawerTitle className="font-mono">{shortUrl}</DrawerTitle>
           <DrawerDescription className="truncate text-xs">
-            {item.destination}
+            {item.url}
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
@@ -704,33 +754,54 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
             }}
           >
             <div className="flex flex-col gap-3">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                defaultValue={item.title ?? ""}
+                placeholder="Optional title"
+              />
+            </div>
+            <div className="flex flex-col gap-3">
               <Label htmlFor="slug">Slug</Label>
               <Input id="slug" defaultValue={item.slug} className="font-mono" />
             </div>
             <div className="flex flex-col gap-3">
-              <Label htmlFor="destination">Destination URL</Label>
-              <Input id="destination" defaultValue={item.destination} />
+              <Label htmlFor="url">Destination URL</Label>
+              <Input id="url" defaultValue={item.url} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-3">
                 <Label htmlFor="status">Status</Label>
-                <Select defaultValue={item.status}>
-                  <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                      <SelectItem value="Expired">Expired</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                <Input id="status" value={status} disabled />
               </div>
               <div className="flex flex-col gap-3">
-                <Label htmlFor="created">Created</Label>
-                <Input id="created" defaultValue={item.created} disabled />
+                <Label htmlFor="expires_at">Expires</Label>
+                <Input
+                  id="expires_at"
+                  type="datetime-local"
+                  defaultValue={
+                    item.expires_at
+                      ? new Date(item.expires_at).toISOString().slice(0, 16)
+                      : ""
+                  }
+                  placeholder="Never"
+                />
               </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Label htmlFor="created_at">Created</Label>
+              <Input
+                id="created_at"
+                defaultValue={new Date(item.created_at).toLocaleDateString(
+                  "en-US",
+                  {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  },
+                )}
+                disabled
+              />
             </div>
           </form>
         </div>

@@ -1,18 +1,28 @@
+"use client";
+
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 
-import data from "./data.json";
-import { Metadata } from "next";
 import { Flex } from "@radix-ui/themes";
-
-export const metadata: Metadata = {
-  title: "Linkly | Dashboard",
-  description: "Shorten your long links",
-};
+import axiosInstance from "@/lib/axios";
+import { useQuery } from "@tanstack/react-query";
+import { AxiosResponse } from "axios";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Page() {
-  return (
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["links"],
+    queryFn: () =>
+      axiosInstance.get("/links").then((res: AxiosResponse) => res.data.links),
+  });
+
+  return isLoading ? (
+    <Skeleton className="w-full h-full grid place-items-center">
+      <Spinner />
+    </Skeleton>
+  ) : (
     <Flex direction="row">
       <Flex
         flexGrow="1"
@@ -26,11 +36,11 @@ export default function Page() {
           gap={{ initial: "16px", lg: "24px" }}
           py={{ initial: "16px", lg: "24px" }}
         >
-          <SectionCards />
+          <SectionCards links={data ?? []} />
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
-          <DataTable data={data} />
+          <DataTable data={data ?? []} />
         </Flex>
       </Flex>
     </Flex>

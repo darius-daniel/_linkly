@@ -1,3 +1,7 @@
-export async function POST(request: Request) {}
+import prisma from "@/lib/db/client";
 
-export async function GET(request: Request) {}
+export async function GET(request: Request) {
+  const links = await prisma.link.findMany({ orderBy: { created_at: "desc" } });
+
+  return Response.json({ links });
+}

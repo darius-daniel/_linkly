@@ -21,6 +21,7 @@ import { createLink } from "@/lib/actions/link";
 import { Spinner } from "./ui/spinner";
 import { Text } from "@radix-ui/themes";
 import { toast } from "sonner";
+import { dashboardQueryClient } from "@/app/dashboard/layout";
 
 export default function QuickCreateDialog() {
   const [open, setOpen] = useState(false);
@@ -33,7 +34,9 @@ export default function QuickCreateDialog() {
       const hasErrors = state.errors && Object.keys(state.errors).length > 0;
 
       if (!hasErrors) {
-        setOpen(false); // Close dialog on success
+        setOpen(false);
+        // Invalidate to refetch fresh data from the server
+        dashboardQueryClient.invalidateQueries({ queryKey: ["links"] });
         toast.success(state.message, {
           icon: <CircleCheck color="green" />,
         });
