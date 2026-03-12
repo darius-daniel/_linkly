@@ -110,6 +110,8 @@ import axiosInstance from "@/lib/axios";
 import { dashboardQueryClient } from "@/app/dashboard/layout";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@/app/generated/prisma/client";
+import LinkCreateDialog from "./link-create-dialog";
+import LinkCreateButton from "./link-create-btn";
 
 export const schema = z.object({
   id: z.string(),
@@ -125,9 +127,9 @@ export const schema = z.object({
 
 type LinkRow = z.infer<typeof schema>;
 
-function getLinkStatus(link: LinkRow): "Active" | "Expired" | "Inactive" {
+function getLinkStatus(link: LinkRow): "Active" | "Inactive" {
   if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
-    return "Expired";
+    return "Inactive";
   }
   return "Active";
 }
@@ -405,7 +407,7 @@ export function DataTable({ data: initialData }: { data: LinkRow[] }) {
     if (activeTab === "active")
       return data.filter((d) => getLinkStatus(d) === "Active");
     if (activeTab === "expired")
-      return data.filter((d) => getLinkStatus(d) === "Expired");
+      return data.filter((d) => getLinkStatus(d) === "Inactive");
     return data;
   }, [data, activeTab]);
 
@@ -453,7 +455,7 @@ export function DataTable({ data: initialData }: { data: LinkRow[] }) {
   const counts = React.useMemo(
     () => ({
       active: data.filter((d) => getLinkStatus(d) === "Active").length,
-      expired: data.filter((d) => getLinkStatus(d) === "Expired").length,
+      expired: data.filter((d) => getLinkStatus(d) === "Inactive").length,
     }),
     [data],
   );
@@ -524,10 +526,7 @@ export function DataTable({ data: initialData }: { data: LinkRow[] }) {
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <PlusIcon />
-            <span className="hidden lg:inline">Create Link</span>
-          </Button>
+          <LinkCreateDialog triggerBtn={<LinkCreateButton />} />
         </div>
       </div>
 

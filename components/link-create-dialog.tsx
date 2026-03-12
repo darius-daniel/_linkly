@@ -15,15 +15,18 @@ import { Field, FieldGroup } from "./ui/field";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { CircleCheck, CirclePlusIcon, CircleX } from "lucide-react";
-import { SidebarMenuButton } from "./ui/sidebar";
-import { useActionState, useEffect, useState } from "react";
+import { JSX, useActionState, useEffect, useState } from "react";
 import { createLink } from "@/lib/actions/link";
 import { Spinner } from "./ui/spinner";
 import { Text } from "@radix-ui/themes";
 import { toast } from "sonner";
 import { dashboardQueryClient } from "@/app/dashboard/layout";
 
-export default function QuickCreateDialog() {
+export default function LinkCreateDialog({
+  triggerBtn,
+}: {
+  triggerBtn: JSX.Element;
+}) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(createLink, {
     errors: {},
@@ -51,10 +54,7 @@ export default function QuickCreateDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild className="border border-primary">
-        <SidebarMenuButton className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear">
-          <CirclePlusIcon />
-          <span>Quick Create</span>
-        </SidebarMenuButton>
+        {triggerBtn}
       </DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <form action={formAction}>

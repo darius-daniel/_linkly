@@ -50,10 +50,10 @@ export default function LinkEditDialog({ link }: { link: Link }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild className="border border-primary">
-        <SidebarMenuButton className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear">
+        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear">
           <CirclePlusIcon />
           <span>Quick Create</span>
-        </SidebarMenuButton>
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <form action={formAction}>

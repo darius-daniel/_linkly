@@ -8,8 +8,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { CirclePlusIcon, MailIcon } from "lucide-react";
-import QuickCreateDialog from "./quick-create-dialog";
+import { CirclePlusIcon } from "lucide-react";
+import NewLinkDialog from "./link-create-dialog";
+import QuickCreateButton from "./quick-create-button";
+import LinkCreateDialog from "./link-create-dialog";
 
 export function NavMain({
   items,
@@ -24,9 +26,7 @@ export function NavMain({
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <QuickCreateDialog />
-          </SidebarMenuItem>
+          <LinkCreateDialog triggerBtn={<QuickCreateButton />} />
         </SidebarMenu>
         <SidebarMenu>
           {items.map((item) => (
