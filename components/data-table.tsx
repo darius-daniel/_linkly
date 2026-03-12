@@ -104,6 +104,7 @@ import {
   CopyIcon,
   ExternalLinkIcon,
   TriangleAlert,
+  PencilIcon,
 } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { dashboardQueryClient } from "@/app/dashboard/layout";
@@ -115,17 +116,17 @@ export const schema = z.object({
   title: z.string().nullable().optional(),
   slug: z.string(),
   url: z.string(),
-  user_id: z.string().nullable().optional(),
+  userID: z.string().nullable().optional(),
   clicks: z.number(),
-  expires_at: z.string().nullable().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
+  expiresAt: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 type LinkRow = z.infer<typeof schema>;
 
 function getLinkStatus(link: LinkRow): "Active" | "Expired" | "Inactive" {
-  if (link.expires_at && new Date(link.expires_at) < new Date()) {
+  if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
     return "Expired";
   }
   return "Active";
@@ -218,7 +219,7 @@ const columns: ColumnDef<LinkRow>[] = [
         href={row.original.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-muted-foreground flex max-w-[240px] items-center gap-1 truncate text-sm hover:text-foreground"
+        className="text-muted-foreground flex max-w-[240px] items-center gap-1 truncate text-xs hover:text-foreground"
       >
         <span className="truncate">
           {row.original.url.replace(/^https?:\/\//, "")}
@@ -230,7 +231,15 @@ const columns: ColumnDef<LinkRow>[] = [
   {
     id: "status",
     header: "Status",
-    cell: ({ row }) => <StatusBadge status={getLinkStatus(row.original)} />,
+    cell: ({ row }) => {
+      const status = getLinkStatus(row.original);
+
+      return (
+        <div className="flex items-center gap-2">
+          <StatusBadge status={status} />
+        </div>
+      );
+    },
     filterFn: (row, _columnId, filterValue) => {
       return getLinkStatus(row.original) === filterValue;
     },
@@ -239,17 +248,17 @@ const columns: ColumnDef<LinkRow>[] = [
     accessorKey: "clicks",
     header: () => <div className="w-full text-right">Clicks</div>,
     cell: ({ row }) => (
-      <div className="text-right tabular-nums font-medium">
+      <div className="text-right tabular-nums font-medium text-xs">
         {row.original.clicks.toLocaleString()}
       </div>
     ),
   },
   {
-    accessorKey: "created_at",
+    accessorKey: "createdAt",
     header: "Created",
     cell: ({ row }) => (
-      <span className="text-muted-foreground text-sm">
-        {new Date(row.original.created_at).toLocaleDateString("en-US", {
+      <span className="text-muted-foreground text-xs">
+        {new Date(row.original.createdAt).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
           year: "numeric",
@@ -297,8 +306,9 @@ const columns: ColumnDef<LinkRow>[] = [
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36">
+          <DropdownMenuContent align="end" className="w-36 flex flex-col gap-2">
             <DropdownMenuItem
+              className="text-xs"
               onClick={() => {
                 navigator.clipboard.writeText(
                   `https://lnkly.io/${row.original.slug}`,
@@ -311,7 +321,7 @@ const columns: ColumnDef<LinkRow>[] = [
               <CopyIcon className="mr-2 size-3.5" />
               Copy link
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild className="text-xs">
               <a
                 href={row.original.url}
                 target="_blank"
@@ -321,7 +331,10 @@ const columns: ColumnDef<LinkRow>[] = [
                 Visit URL
               </a>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {}}>Edit</DropdownMenuItem>
+            <DropdownMenuItem className="text-xs" onClick={() => {}}>
+              <PencilIcon className="mr-2 size-3.5" />
+              Edit
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
@@ -684,7 +697,7 @@ function TableCellViewer({ item }: { item: LinkRow }) {
       <DrawerTrigger asChild>
         <Button
           variant="link"
-          className="text-foreground w-fit px-0 text-left font-mono text-sm"
+          className="text-foreground w-fit px-0 text-left font-mono text-xs"
         >
           {shortUrl}
         </Button>
@@ -780,8 +793,8 @@ function TableCellViewer({ item }: { item: LinkRow }) {
                   id="expires_at"
                   type="datetime-local"
                   defaultValue={
-                    item.expires_at
-                      ? new Date(item.expires_at).toISOString().slice(0, 16)
+                    item.expiresAt
+                      ? new Date(item.expiresAt).toISOString().slice(0, 16)
                       : ""
                   }
                   placeholder="Never"
@@ -792,7 +805,7 @@ function TableCellViewer({ item }: { item: LinkRow }) {
               <Label htmlFor="created_at">Created</Label>
               <Input
                 id="created_at"
-                defaultValue={new Date(item.created_at).toLocaleDateString(
+                defaultValue={new Date(item.createdAt).toLocaleDateString(
                   "en-US",
                   {
                     month: "short",

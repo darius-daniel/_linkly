@@ -14,29 +14,29 @@ datasource db {
 }
 
 model Link {
-  id         String    @id @default(ulid())
-  title      String?
-  slug       String    @unique @default(nanoid(6))
-  url        String
-  user_id    String?
-  clicks     Int       @default(0)
-  expires_at DateTime?
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
-  visits     Visit[]
+  id        String    @id @default(ulid())
+  title     String?
+  slug      String    @unique @default(nanoid(6))
+  url       String
+  userID    String?   @map("user_id")
+  clicks    Int       @default(0)
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  visits    Visit[]
 
-  @@index([slug, user_id, created_at])
+  @@index([slug, userID, createdAt])
 }
 
 model Visit {
-  id         BigInt   @id @default(dbgenerated())
-  link_id    String
-  referrer   String?
-  country    String?
-  device     String   @default("unknown")
-  created_at DateTime @default(now())
-  link       Link     @relation(fields: [link_id], references: [id], onDelete: Cascade)
+  id        BigInt   @id @default(dbgenerated())
+  linkID    String   @map("link_id")
+  referrer  String?
+  country   String?
+  device    String   @default("unknown")
+  createdAt DateTime @default(now()) @map("created_at")
+  link      Link     @relation(fields: [linkID], references: [id], onDelete: Cascade)
 
-  @@index([link_id])
-  @@index([link_id, created_at])
+  @@index([linkID])
+  @@index([linkID, createdAt])
 }
