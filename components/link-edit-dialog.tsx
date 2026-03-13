@@ -1,3 +1,5 @@
+"use client";
+
 import { Link } from "@/app/generated/prisma/client";
 import {
   Dialog,
@@ -9,8 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { SidebarMenuButton } from "./ui/sidebar";
-import { CircleCheck, CirclePlusIcon, CircleX } from "lucide-react";
+import { CircleCheck, CircleX } from "lucide-react";
 import { Field, FieldGroup } from "./ui/field";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
@@ -20,11 +21,18 @@ import { Spinner } from "./ui/spinner";
 import { dashboardQueryClient } from "@/app/dashboard/layout";
 import { toast } from "sonner";
 import { useActionState, useEffect, useState } from "react";
-import { createLink } from "@/lib/actions/link";
+import { updateLink } from "@/lib/actions/link";
+import LinkEditButton from "./link-edit-btn";
 
-export default function LinkEditDialog({ link }: { link: Link }) {
+export default function LinkEditDialog({
+  link,
+  trigger,
+}: {
+  link: Link;
+  trigger?: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(createLink, {
+  const [state, formAction, pending] = useActionState(updateLink, {
     errors: {},
   });
 
@@ -34,7 +42,6 @@ export default function LinkEditDialog({ link }: { link: Link }) {
 
       if (!hasErrors) {
         setOpen(false);
-        // Invalidate to refetch fresh data from the server
         dashboardQueryClient.invalidateQueries({ queryKey: ["links"] });
         toast.success(state.message, {
           icon: <CircleCheck color="green" />,
@@ -47,34 +54,51 @@ export default function LinkEditDialog({ link }: { link: Link }) {
     }
   }, [state]);
 
+  // Format datetime for input (YYYY-MM-DDTHH:mm)
+  const formatDateTimeLocal = (date: Date | null) => {
+    if (!date) return "";
+    return new Date(date).toISOString().slice(0, 16);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild className="border border-primary">
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear">
-          <CirclePlusIcon />
-          <span>Quick Create</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
+      <DialogTrigger asChild>{trigger || <LinkEditButton />}</DialogTrigger>
+      <DialogContent className="sm:max-w-md">
         <form action={formAction}>
+          <input type="hidden" name="id" value={link.id} />
           <DialogHeader>
-            <DialogTitle>Create new short link</DialogTitle>
+            <DialogTitle>Edit short link</DialogTitle>
             <DialogDescription>
-              Enter the URL you want to shorten. If you don't provide a custom
-              slug, one will be generated for you.
+              Update your link details. Changes will be saved immediately.
             </DialogDescription>
           </DialogHeader>
-          <FieldGroup className="min-h-48 pt-2">
+          <FieldGroup className="gap-4 py-4">
             <Field>
-              <Label htmlFor="url">URL</Label>
+              <Label htmlFor="title">Title (optional)</Label>
+              <Input
+                id="title"
+                name="title"
+                defaultValue={link.title || ""}
+                placeholder="My awesome link"
+                className={state.errors?.title ? "border-red-500" : ""}
+              />
+              {state.errors?.title?.map((error) => (
+                <Text color="red" key={error} size="1">
+                  {error}
+                </Text>
+              ))}
+            </Field>
+            <Field>
+              <Label htmlFor="url">Destination URL</Label>
               <Input
                 id="url"
                 name="url"
+                defaultValue={link.url}
                 placeholder="https://example.com"
                 className={state.errors?.url ? "border-red-500" : ""}
               />
               {state.errors?.url?.map((error) => (
-                <Text color="red" key={error}>
+                <Text color="red" key={error} size="1">
                   {error}
                 </Text>
               ))}
@@ -84,21 +108,49 @@ export default function LinkEditDialog({ link }: { link: Link }) {
               <Input
                 id="slug"
                 name="slug"
-                placeholder="example"
+                defaultValue={link.slug}
+                placeholder="my-link"
                 className={state.errors?.slug ? "border-red-500" : ""}
               />
               {state.errors?.slug?.map((error) => (
-                <Text color="red" key={error}>
+                <Text color="red" key={error} size="1">
                   {error}
                 </Text>
               ))}
+            </Field>
+            <Field>
+              <Label htmlFor="expiresAt">Expires at (optional)</Label>
+              <Input
+                id="expiresAt"
+                name="expiresAt"
+                type="date"
+                defaultValue={formatDateTimeLocal(link.expiresAt)}
+                className={state.errors?.expiresAt ? "border-red-500" : ""}
+              />
+              {state.errors?.expiresAt?.map((error) => (
+                <Text color="red" key={error} size="1">
+                  {error}
+                </Text>
+              ))}
+              <Text color="gray" size="1">
+                Leave empty for no expiration
+              </Text>
             </Field>
           </FieldGroup>
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">{pending ? <Spinner /> : "Create"}</Button>
+            <Button
+              type="submit"
+              disabled={
+                pending ||
+                (link.expiresAt && new Date(link.expiresAt) < new Date()) ||
+                true
+              }
+            >
+              {pending ? <Spinner /> : "Save changes"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

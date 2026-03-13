@@ -95,7 +95,6 @@ import {
   EllipsisVerticalIcon,
   Columns3Icon,
   ChevronDownIcon,
-  PlusIcon,
   ChevronsLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -110,6 +109,7 @@ import axiosInstance from "@/lib/axios";
 import { dashboardQueryClient } from "@/app/dashboard/layout";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@/app/generated/prisma/client";
+import LinkEditDialog from "./link-edit-dialog";
 import LinkCreateDialog from "./link-create-dialog";
 import LinkCreateButton from "./link-create-btn";
 
@@ -237,9 +237,42 @@ const columns: ColumnDef<LinkRow>[] = [
       const status = getLinkStatus(row.original);
 
       return (
-        <div className="flex items-center gap-2">
+        <Button
+          className="hover:cursor-pointer"
+          variant="ghost"
+          onClick={async () => {
+            try {
+              const response = await axiosInstance.patch(
+                `/links/${row.original.id}`,
+                {
+                  status: status === "Active" ? "Inactive" : "Active",
+                },
+              );
+
+              const { link } = response.data;
+
+              dashboardQueryClient.setQueryData(
+                ["links"],
+                (oldData: Link[]) => {
+                  if (!oldData) return;
+                  return oldData.map((item) =>
+                    item.id === link.id ? link : item,
+                  );
+                },
+              );
+
+              toast.success("Updated successfully", {
+                icon: <CircleCheckIcon color="green" />,
+              });
+            } catch {
+              toast.error("Update failed", {
+                icon: <TriangleAlert color="red" />,
+              });
+            }
+          }}
+        >
           <StatusBadge status={status} />
-        </div>
+        </Button>
       );
     },
     filterFn: (row, _columnId, filterValue) => {
@@ -333,10 +366,18 @@ const columns: ColumnDef<LinkRow>[] = [
                 Visit URL
               </a>
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs" onClick={() => {}}>
-              <PencilIcon className="mr-2 size-3.5" />
-              Edit
-            </DropdownMenuItem>
+            <LinkEditDialog
+              link={row.original as unknown as Link}
+              trigger={
+                <DropdownMenuItem
+                  className="text-xs"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <PencilIcon className="mr-2 size-3.5" />
+                  Edit
+                </DropdownMenuItem>
+              }
+            />
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
@@ -455,7 +496,7 @@ export function DataTable({ data: initialData }: { data: LinkRow[] }) {
   const counts = React.useMemo(
     () => ({
       active: data.filter((d) => getLinkStatus(d) === "Active").length,
-      expired: data.filter((d) => getLinkStatus(d) === "Inactive").length,
+      inactive: data.filter((d) => getLinkStatus(d) === "Inactive").length,
     }),
     [data],
   );
@@ -482,7 +523,7 @@ export function DataTable({ data: initialData }: { data: LinkRow[] }) {
             <SelectGroup>
               <SelectItem value="all">All Links</SelectItem>
               <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
+              <SelectItem value="expired">Inactive</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -492,7 +533,7 @@ export function DataTable({ data: initialData }: { data: LinkRow[] }) {
             Active <Badge variant="secondary">{counts.active}</Badge>
           </TabsTrigger>
           <TabsTrigger value="expired">
-            Expired <Badge variant="secondary">{counts.expired}</Badge>
+            Inactive <Badge variant="secondary">{counts.inactive}</Badge>
           </TabsTrigger>
         </TabsList>
         <div className="flex items-center gap-2">
