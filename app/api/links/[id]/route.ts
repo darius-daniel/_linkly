@@ -19,6 +19,25 @@ export async function DELETE(
   );
 }
 
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const { title, url, slug, expiresAt } = await request.json();
+
+  try {
+    const link = await prisma.link.update({
+      where: { id },
+      data: { title, url, slug, expiresAt },
+    });
+    return Response.json({ link }, { status: 200 });
+  } catch (error) {
+    console.error("Error updating link:", error);
+    return Response.json({ message: "Failed to update link" }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
