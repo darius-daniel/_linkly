@@ -13,12 +13,47 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(ulid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime? @map("email_verified")
+  password      String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  links         Link[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(ulid())
+  userID    String   @map("user_id")
+  user      User     @relation(fields: [userID], references: [id], onDelete: Cascade)
+  device    Json
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  expiresAt DateTime @map("expires_at")
+
+  @@index([userID])
+  @@map("sessions")
+}
+
 model Link {
   id        String    @id @default(ulid())
   title     String?
   slug      String    @unique @default(nanoid(6))
   url       String
   userID    String?   @map("user_id")
+  user      User?     @relation(fields: [userID], references: [id], onDelete: Cascade)
   clicks    Int       @default(0)
   expiresAt DateTime? @map("expires_at")
   createdAt DateTime  @default(now()) @map("created_at")
@@ -26,6 +61,7 @@ model Link {
   visits    Visit[]
 
   @@index([slug, userID, createdAt])
+  @@map("links")
 }
 
 model Visit {
@@ -39,4 +75,5 @@ model Visit {
 
   @@index([linkID])
   @@index([linkID, createdAt])
+  @@map("visits")
 }
