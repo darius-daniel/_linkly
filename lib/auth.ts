@@ -9,11 +9,35 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-  },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    autoSignIn: true,
+    minPasswordLength: 8,
+    maxPasswordLength: 64,
+    requireEmailVerification: true,
+    requireEmail: true,
+    requirePassword: true,
+    requirePasswordConfirmation: true,
+    enforceStrongPassword: true,
+    passwordPolicy: {
+      minLength: 8,
+      maxLength: 64,
+      requireUppercase: true,
+      requireLowercase: true,
+      requireNumbers: true,
+      requireSymbols: true,
+    },
+    emailVerification: {
+      enabled: true,
+      autoSignIn: true,
+      requireEmailVerification: true,
+      requireEmail: true,
+      requirePassword: true,
+      requirePasswordConfirmation: true,
     },
   },
+  //   socialProviders: {
+  //     google: {
+  //       clientId: process.env.GOOGLE_CLIENT_ID as string,
+  //       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+  //     },
+  //   },
 });

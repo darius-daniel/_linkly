@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,10 +15,54 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { GalleryVerticalEndIcon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import {
+  CircleCheckIcon,
+  CircleXIcon,
+  GalleryVerticalEndIcon,
+} from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
+  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(
+    null,
+  );
+  const router = useRouter();
+
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    const { data, error } = await authClient.signUp.email(
+      {
+        email: formData.get("email") as string,
+        password: formData.get("password") as string,
+        name: formData.get("name") as string,
+      },
+      {
+        onRequest: (ctx) => {
+          setLoadingToastId(toast.loading("Signing up..."));
+        },
+        onSuccess: (ctx) => {
+          toast.dismiss(loadingToastId as string | number);
+          toast.success("Signed up successfully", {
+            icon: <CircleCheckIcon className="size-4" />,
+          });
+          router.push("/dashboard");
+        },
+        onError: (ctx) => {
+          toast.dismiss(loadingToastId as string | number);
+          toast.error(ctx.error.message, {
+            icon: <CircleXIcon className="size-4" />,
+          });
+        },
+      },
+    );
+  };
+
   return (
     <Card {...props}>
       <div className="flex flex-col items-center gap-2 text-center">
@@ -35,16 +81,23 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form>
+        <form onSubmit={handleSignup}>
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="name">Full Name</FieldLabel>
-              <Input id="name" type="text" placeholder="John Doe" required />
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="John Doe"
+                required
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="m@example.com"
                 required
@@ -54,18 +107,10 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                 with anyone else.
               </FieldDescription>
             </Field>
-            <FieldGroup className="grid grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input id="password" type="password" required />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="confirm-password">
-                  Confirm Password
-                </FieldLabel>
-                <Input id="confirm-password" type="password" required />
-              </Field>
-            </FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <Input id="password" name="password" type="password" required />
+            </Field>
             <FieldDescription className="text-xs">
               Must be at least 8 characters long.
             </FieldDescription>
