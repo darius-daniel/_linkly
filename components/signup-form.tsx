@@ -22,7 +22,6 @@ import {
   GalleryVerticalEndIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,7 +29,6 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   const [loadingToastId, setLoadingToastId] = useState<string | number | null>(
     null,
   );
-  const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,6 +39,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
         email: formData.get("email") as string,
         password: formData.get("password") as string,
         name: formData.get("name") as string,
+        callbackURL: "/dashboard",
       },
       {
         onRequest: (ctx) => {
@@ -51,7 +50,6 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
           toast.success("Signed up successfully", {
             icon: <CircleCheckIcon className="size-4" />,
           });
-          router.push("/dashboard");
         },
         onError: (ctx) => {
           toast.dismiss(loadingToastId as string | number);
