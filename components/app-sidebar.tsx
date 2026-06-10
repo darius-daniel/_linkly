@@ -26,17 +26,8 @@ import {
   Tag,
   Link2,
 } from "lucide-react";
-import { createAvatar } from "@dicebear/core";
-import { openPeeps } from "@dicebear/collection";
 
 const data = {
-  // user: {
-  //   name: "shadcn",
-  //   email: "m@example.com",
-  //   avatar: createAvatar(openPeeps, {
-  //     seed: "shadcn-m@example.com",
-  //   }).toDataUri(),
-  // },
   navMain: [
     {
       title: "Overview",
@@ -103,7 +94,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavDocuments items={data.documents} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
