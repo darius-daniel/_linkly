@@ -11,19 +11,23 @@ import {
 } from "@/components/ui/card";
 import { TrendingUpIcon, TrendingDownIcon } from "lucide-react";
 import { Link } from "@/app/generated/prisma/client";
-
-function formatGrowth(current: number, previous: number): string {
-  if (previous === 0) return current > 0 ? "+100%" : "0%";
-  const pct = ((current - previous) / previous) * 100;
-  return `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`;
-}
-
-function isGrowing(current: number, previous: number): boolean {
-  if (previous === 0) return current > 0;
-  return current >= previous;
-}
+import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "@/lib/axios";
+import {
+  type ClickMetrics,
+  formatCtrPercent,
+  formatCtrPeriodChange,
+  formatPeriodChangePercent,
+  isPeriodGrowing,
+} from "@/lib/stats/click-metrics";
 
 export function SectionCards({ links }: { links: Array<Link> }) {
+  const { data: metrics } = useQuery<{ metrics: ClickMetrics }>({
+    queryKey: ["dashboard-metrics"],
+    queryFn: () =>
+      axiosInstance.get("/dashboard/metrics").then((res) => res.data),
+  });
+
   const now = new Date();
   const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -49,8 +53,18 @@ export function SectionCards({ links }: { links: Array<Link> }) {
     return d >= startOfLastMonth && d < startOfThisMonth;
   }).length;
 
-  const linksTrending = isGrowing(thisMonthLinks, lastMonthLinks);
-  const activeTrending = isGrowing(thisMonthActive, lastMonthActive);
+  const linksTrending = isPeriodGrowing(thisMonthLinks, lastMonthLinks);
+  const activeTrending = isPeriodGrowing(thisMonthActive, lastMonthActive);
+  const clickMetrics = metrics?.metrics;
+  const clicksTrending = clickMetrics
+    ? isPeriodGrowing(
+        clickMetrics.thisMonthClicks,
+        clickMetrics.lastMonthClicks,
+      )
+    : true;
+  const ctrTrending = clickMetrics
+    ? isPeriodGrowing(clickMetrics.thisMonthCtr, clickMetrics.lastMonthCtr)
+    : false;
 
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
@@ -67,11 +81,11 @@ export function SectionCards({ links }: { links: Array<Link> }) {
               ) : (
                 <TrendingDownIcon color="red" />
               )}
-              {formatGrowth(thisMonthLinks, lastMonthLinks)}
+              {formatPeriodChangePercent(thisMonthLinks, lastMonthLinks)}
             </Badge>
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        <CardFooter className="flex-col items-start gap-1.5 texrrt-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
             {linksTrending ? "Growing steadily" : "Slowing down"}{" "}
             {linksTrending ? (
@@ -90,18 +104,33 @@ export function SectionCards({ links }: { links: Array<Link> }) {
         <CardHeader>
           <CardDescription>Total Clicks</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {links.reduce((acc, link) => acc + link.clicks, 0)}
+            {clickMetrics?.totalClicks ??
+              links.reduce((acc, link) => acc + link.clicks, 0)}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingUpIcon color="green" />
-              +11.4%
+              {clicksTrending ? (
+                <TrendingUpIcon color="green" />
+              ) : (
+                <TrendingDownIcon color="red" />
+              )}
+              {clickMetrics
+                ? formatPeriodChangePercent(
+                    clickMetrics.thisMonthClicks,
+                    clickMetrics.lastMonthClicks,
+                  )
+                : "—"}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Up this month <TrendingUpIcon className="size-4" color="green" />
+            {clicksTrending ? "Up this month" : "Down this month"}{" "}
+            {clicksTrending ? (
+              <TrendingUpIcon className="size-4" color="green" />
+            ) : (
+              <TrendingDownIcon className="size-4" color="red" />
+            )}
           </div>
           <div className="text-muted-foreground">
             Across all shortened links
@@ -113,19 +142,34 @@ export function SectionCards({ links }: { links: Array<Link> }) {
         <CardHeader>
           <CardDescription>Click-Through Rate</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            3.8%
+            {clickMetrics
+              ? formatCtrPercent(clickMetrics.clickThroughRate)
+              : "—"}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingDownIcon color="red" />
-              -0.4%
+              {ctrTrending ? (
+                <TrendingUpIcon color="green" />
+              ) : (
+                <TrendingDownIcon color="red" />
+              )}
+              {clickMetrics
+                ? formatCtrPeriodChange(
+                    clickMetrics.thisMonthCtr,
+                    clickMetrics.lastMonthCtr,
+                  )
+                : "—"}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Slight dip this week{" "}
-            <TrendingDownIcon color="red" className="size-4" />
+            {ctrTrending ? "Improving this month" : "Slight dip this month"}{" "}
+            {ctrTrending ? (
+              <TrendingUpIcon color="green" className="size-4" />
+            ) : (
+              <TrendingDownIcon color="red" className="size-4" />
+            )}
           </div>
           <div className="text-muted-foreground">
             Average across active links
@@ -146,7 +190,7 @@ export function SectionCards({ links }: { links: Array<Link> }) {
               ) : (
                 <TrendingDownIcon color="red" />
               )}
-              {formatGrowth(thisMonthActive, lastMonthActive)}
+              {formatPeriodChangePercent(thisMonthActive, lastMonthActive)}
             </Badge>
           </CardAction>
         </CardHeader>
