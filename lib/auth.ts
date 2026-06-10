@@ -4,6 +4,14 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./db/client";
 
 export const auth = betterAuth({
+  session: {
+    storeSessionInDatabase: true,
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+      strategy: "compact", // or "jwt" or "jwe"
+    },
+  },
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -25,10 +33,10 @@ export const auth = betterAuth({
       requireSymbols: true,
     },
   },
-  //   socialProviders: {
-  //     google: {
-  //       clientId: process.env.GOOGLE_CLIENT_ID as string,
-  //       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-  //     },
-  //   },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
 });
