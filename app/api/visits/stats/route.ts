@@ -16,7 +16,7 @@ export async function GET(request: Request) {
         TO_CHAR(DATE("created_at"), 'YYYY-MM-DD') AS date,
         COUNT(*)                                   AS clicks,
         COUNT(DISTINCT country)                    AS unique
-      FROM "Visit"
+      FROM "visits"
       WHERE "created_at" >= NOW() - ${interval}
       GROUP BY DATE("created_at")
       ORDER BY date ASC

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { authClient } from "@/lib/auth-client";
 
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
@@ -25,17 +26,8 @@ import {
   Tag,
   Link2,
 } from "lucide-react";
-import { createAvatar } from "@dicebear/core";
-import { openPeeps } from "@dicebear/collection";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: createAvatar(openPeeps, {
-      seed: "shadcn-m@example.com",
-    }).toDataUri(),
-  },
   navMain: [
     {
       title: "Overview",
@@ -63,54 +55,6 @@ const data = {
       icon: <Tag />,
     },
   ],
-  // navClouds: [
-  //   {
-  //     title: "Team",
-  //     icon: <CameraIcon />,
-  //     isActive: true,
-  //     url: "#",
-  //     items: [
-  //       {
-  //         title: "Active Proposals",
-  //         url: "#",
-  //       },
-  //       {
-  //         title: "Archived",
-  //         url: "#",
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     title: "Proposal",
-  //     icon: <FileTextIcon />,
-  //     url: "#",
-  //     items: [
-  //       {
-  //         title: "Active Proposals",
-  //         url: "#",
-  //       },
-  //       {
-  //         title: "Archived",
-  //         url: "#",
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     title: "Prompts",
-  //     icon: <FileTextIcon />,
-  //     url: "#",
-  //     items: [
-  //       {
-  //         title: "Active Proposals",
-  //         url: "#",
-  //       },
-  //       {
-  //         title: "Archived",
-  //         url: "#",
-  //       },
-  //     ],
-  //   },
-  // ],
   navSecondary: [
     {
       title: "Settings",
@@ -128,23 +72,6 @@ const data = {
       icon: <SearchIcon />,
     },
   ],
-  // documents: [
-  //   {
-  //     name: "Data Library",
-  //     url: "#",
-  //     icon: <DatabaseIcon />,
-  //   },
-  //   {
-  //     name: "Reports",
-  //     url: "#",
-  //     icon: <FileChartColumnIcon />,
-  //   },
-  //   {
-  //     name: "Word Assistant",
-  //     url: "#",
-  //     icon: <FileIcon />,
-  //   },
-  // ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -167,11 +94,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavDocuments items={data.documents} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
