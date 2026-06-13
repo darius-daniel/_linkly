@@ -729,7 +729,7 @@ const sparkConfig = {
 
 function TableCellViewer({ item }: { item: LinkRow }) {
   const isMobile = useIsMobile();
-  const shortUrl = `lnkly.io/${item.slug}`;
+  const shortUrl = `lnkly.netlify.app/${item.slug}`;
   const status = getLinkStatus(item);
 
   return (
