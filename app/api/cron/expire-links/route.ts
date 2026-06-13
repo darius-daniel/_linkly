@@ -9,12 +9,12 @@ export async function GET(request: Request) {
   }
 
   try {
+    const now = new Date();
     const result = await prisma.link.updateMany({
       where: {
-        expiresAt: { lte: new Date() },
-        isActive: true,
+        expiresAt: { lte: now },
       },
-      data: { isActive: false },
+      data: { expiresAt: now },
     });
 
     return NextResponse.json({

@@ -15,7 +15,7 @@ export async function GET(
       return Response.json({ error: "Link not found" }, { status: 404 });
     }
 
-    return Response.json({ clicks: link.clicks });
+    return Response.json({ clicks: link.clicks }, { status: 200 });
   } catch (error) {
     console.log(error);
     return Response.json({ error: "Failed to fetch clicks" }, { status: 500 });
