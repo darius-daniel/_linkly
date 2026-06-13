@@ -386,7 +386,7 @@ function Pricing() {
                   variant={plan.highlighted ? "default" : "outline"}
                   asChild
                 >
-                  <Link href="/register">{plan.cta}</Link>
+                  <Link href="/signup">{plan.cta}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -464,7 +464,7 @@ function CTA() {
             and measure their links.
           </p>
           <Button size="lg" className="h-12 px-10 text-base" asChild>
-            <Link href="/register">
+            <Link href="/signup">
               Create your free account <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
