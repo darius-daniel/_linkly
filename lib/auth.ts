@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-// If your Prisma file is located elsewhere, you can change the path
 import prisma from "./db/client";
+import { sendEmail, createEmailSender } from "@better-auth/infra";
 
 export const auth = betterAuth({
   session: {
@@ -21,6 +21,7 @@ export const auth = betterAuth({
     minPasswordLength: 8,
     maxPasswordLength: 64,
     requireEmail: true,
+    requireEmailVerification: true,
     requirePassword: true,
     requirePasswordConfirmation: true,
     enforceStrongPassword: true,
@@ -31,6 +32,20 @@ export const auth = betterAuth({
       requireLowercase: true,
       requireNumbers: true,
       requireSymbols: true,
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url, token }, request) => {
+      void sendEmail({
+        to: user.email,
+        template: "verify-email",
+        variables: {
+          verificationUrl: url,
+          verificationCode: token,
+          userEmail: user.email,
+        },
+      });
     },
   },
   socialProviders: {

@@ -49,9 +49,15 @@ export function LoginForm({
         },
         onError: (ctx) => {
           toast.dismiss(loadingToastId as string | number);
-          toast.error(ctx.error.message, {
-            icon: <CircleXIcon className="size-4" />,
-          });
+          if (ctx.error.status === 403) {
+            toast.error("Please verify your email address", {
+              icon: <CircleXIcon className="size-4" />,
+            });
+          } else {
+            toast.error(ctx.error.message, {
+              icon: <CircleXIcon className="size-4" />,
+            });
+          }
         },
       },
     );
