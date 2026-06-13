@@ -6,7 +6,10 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
+const { data } = await authClient.getSession();
 export const dashboardQueryClient = new QueryClient();
 
 export default function DashboardLayout({
@@ -14,6 +17,12 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+
+  if (data?.session.expiresAt && data.session.expiresAt < new Date()) {
+    router.push("/login");
+  }
+
   return (
     <QueryClientProvider client={dashboardQueryClient}>
       <TooltipProvider>
