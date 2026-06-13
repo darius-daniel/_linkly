@@ -44,6 +44,7 @@ export const auth = betterAuth({
           verificationUrl: url,
           verificationCode: token,
           userEmail: user.email,
+          expirationMinutes: "15",
         },
       });
     },

@@ -18,10 +18,12 @@ import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { CircleCheckIcon, CircleXIcon, LinkIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
+  const router = useRouter();
   const [loadingToastId, setLoadingToastId] = useState<string | number | null>(
     null,
   );
@@ -46,6 +48,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
           toast.success("Signed up successfully", {
             icon: <CircleCheckIcon className="size-4" />,
           });
+          router.push("/dashboard");
         },
         onError: (ctx) => {
           toast.dismiss(loadingToastId as string | number);

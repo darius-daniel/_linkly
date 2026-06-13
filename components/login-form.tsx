@@ -16,6 +16,7 @@ import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { router } from "better-auth/api";
 
 export function LoginForm({
   className,
@@ -52,6 +53,10 @@ export function LoginForm({
           if (ctx.error.status === 403) {
             toast.error("Please verify your email address", {
               icon: <CircleXIcon className="size-4" />,
+            });
+            authClient.sendVerificationEmail({
+              email: formData.get("email") as string,
+              callbackURL: "/dashboard",
             });
           } else {
             toast.error(ctx.error.message, {
