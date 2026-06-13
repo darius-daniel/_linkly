@@ -19,7 +19,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
 
-  if (data?.session.expiresAt && data.session.expiresAt < new Date()) {
+  if (!data || data?.session.expiresAt < new Date()) {
     router.push("/login");
   }
 
