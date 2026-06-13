@@ -219,7 +219,7 @@ function Hero() {
 
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button size="lg" className="h-12 px-8 text-base" asChild>
-            <Link href="/register">
+            <Link href="/signup">
               Start for free <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -251,7 +251,7 @@ function Hero() {
         </div>
         <div className="mt-3 flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
           <span className="text-sm font-medium text-primary">
-            lnkly.io/my-article
+            lnkly.netlify.app/my-article
           </span>
           <Badge variant="outline" className="text-xs">
             <Check className="mr-1 h-3 w-3 text-primary" /> Shortened
