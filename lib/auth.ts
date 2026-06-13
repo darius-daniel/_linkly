@@ -41,10 +41,12 @@ export const auth = betterAuth({
         to: user.email,
         template: "verify-email",
         variables: {
-          verificationUrl: url,
+          verificationUrl: `${url}?token=${token}`,
           verificationCode: token,
           userEmail: user.email,
           expirationMinutes: "15",
+          appName: "Linkly",
+          userName: user.name,
         },
       });
     },
