@@ -16,11 +16,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
-import {
-  CircleCheckIcon,
-  CircleXIcon,
-  GalleryVerticalEndIcon,
-} from "lucide-react";
+import { CircleCheckIcon, CircleXIcon, LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -64,9 +60,12 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   return (
     <Card {...props}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <Link href="/" className="flex flex-col items-center gap-2 font-medium">
-          <div className="flex size-8 items-center justify-center rounded-md">
-            <GalleryVerticalEndIcon className="size-6" />
+        <Link
+          href="/"
+          className="flex flex-col items-center gap-2 font-medium p-2 rounded-lg hover:bg-primary/20 transition-all duration-150"
+        >
+          <div className="flex size-8 items-center justify-center">
+            <LinkIcon className="size-6" color="var(--primary)" />
           </div>
           <span className="sr-only">Linkly</span>
         </Link>
