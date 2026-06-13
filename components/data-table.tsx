@@ -346,7 +346,7 @@ const columns: ColumnDef<LinkRow>[] = [
               className="text-xs"
               onClick={() => {
                 navigator.clipboard.writeText(
-                  `https://lnkly.io/${row.original.slug}`,
+                  `https://lnkly.netlify.app/${row.original.slug}`,
                 );
                 toast.success("Copied to clipboard", {
                   icon: <CircleCheckIcon color="green" />,
