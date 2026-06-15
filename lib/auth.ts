@@ -1,9 +1,10 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./db/client";
-import { sendEmail, createEmailSender } from "@better-auth/infra";
+import { sendEmail, dash } from "@better-auth/infra";
 
 export const auth = betterAuth({
+  plugins: [dash()],
   session: {
     storeSessionInDatabase: true,
     cookieCache: {
