@@ -2,7 +2,6 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./db/client";
 import { sendEmail, dash } from "@better-auth/infra";
-import { after } from "next/server";
 
 export const auth = betterAuth({
   plugins: [dash()],
@@ -39,19 +38,17 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url, token }, request) => {
-      after(() => {
-        void sendEmail({
-          to: user.email,
-          template: "verify-email",
-          variables: {
-            verificationUrl: `${url}?token=${token}`,
-            verificationCode: token,
-            userEmail: user.email,
-            expirationMinutes: "15",
-            appName: "Linkly",
-            userName: user.name,
-          },
-        });
+      await sendEmail({
+        to: user.email,
+        template: "verify-email",
+        variables: {
+          verificationUrl: `${url}?token=${token}`,
+          verificationCode: token,
+          userEmail: user.email,
+          expirationMinutes: "15",
+          appName: "Linkly",
+          userName: user.name,
+        },
       });
     },
   },
