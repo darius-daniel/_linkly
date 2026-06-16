@@ -2,72 +2,15 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { CircleCheckIcon, CircleXIcon, LinkIcon } from "lucide-react";
+import { Field, FieldDescription, FieldGroup } from "@/components/ui/field";
+import { LinkIcon } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { toast } from "sonner";
-import { Checkbox } from "@/components/ui/checkbox";
-import { router } from "better-auth/api";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(
-    null,
-  );
-
-  const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target as HTMLFormElement);
-    const { data, error } = await authClient.signIn.email(
-      {
-        email: formData.get("email") as string,
-        password: formData.get("password") as string,
-        callbackURL: "/dashboard",
-        rememberMe:
-          (formData.get("rememberMe") as string) === "on" ? true : false,
-      },
-      {
-        onRequest: (ctx) => {
-          setLoadingToastId(toast.loading("Logging in..."));
-        },
-        onSuccess: (ctx) => {
-          toast.dismiss(loadingToastId as string | number);
-          toast.success("Logged in successfully", {
-            icon: <CircleCheckIcon className="size-4" />,
-          });
-        },
-        onError: (ctx) => {
-          toast.dismiss(loadingToastId as string | number);
-          if (ctx.error.status === 403) {
-            toast.error("Please verify your email address", {
-              icon: <CircleXIcon className="size-4" />,
-            });
-            authClient.sendVerificationEmail({
-              email: formData.get("email") as string,
-              callbackURL: "/dashboard",
-            });
-          } else {
-            toast.error(ctx.error.message, {
-              icon: <CircleXIcon className="size-4" />,
-            });
-          }
-        },
-      },
-    );
-  };
-
   const handleSignInWithGoogle = async () => {
     await authClient.signIn.social({
       provider: "google",
@@ -77,7 +20,7 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <form onSubmit={handleLogin}>
+      <div>
         <FieldGroup>
           <div className="flex flex-col items-center gap-2 text-center">
             <Link
@@ -94,36 +37,7 @@ export function LoginForm({
               Don&apos;t have an account? <Link href="/signup">Sign up</Link>
             </FieldDescription>
           </div>
-          <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
-            <Input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="m@example.com"
-              required
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Input
-              id="password"
-              type="password"
-              name="password"
-              placeholder="********"
-              required
-            />
-          </Field>
-          <Field orientation="horizontal">
-            <Checkbox id="rememberMe" name="rememberMe" checked />
-            <FieldLabel htmlFor="rememberMe" className="text-sm">
-              Remember me
-            </FieldLabel>
-          </Field>
-          <Field>
-            <Button type="submit">Login</Button>
-          </Field>
-          <FieldSeparator>Or</FieldSeparator>
+
           <Field>
             <Button
               variant="outline"
@@ -140,7 +54,7 @@ export function LoginForm({
             </Button>
           </Field>
         </FieldGroup>
-      </form>
+      </div>
       <FieldDescription className="px-6 text-center">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
         and <a href="#">Privacy Policy</a>.
